@@ -2,41 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_flutter/text_widget.dart';
 
+final scopedProvider = ScopedProvider<int>((ref) => throw UnimplementedError());
 
-
-
-final streamProvider = StreamProvider<String>(
-      (ref) => Stream.periodic(Duration(seconds: 1), (count) => count.toString()),
-);
-
-Widget buildStreamBuilder(watch) {
-  final stream = watch(streamProvider.stream);
-  return StreamBuilder<String>(
-    stream: stream,
-    builder: (context, snapshot) {
-      switch (snapshot.connectionState) {
-        case ConnectionState.waiting:
-          return CircularProgressIndicator();
-        default:
-          if (snapshot.hasError) {
-            return TextWidget('Error: ${snapshot.error}');
-          } else {
-            final counter = snapshot.data;
-            return TextWidget(counter);
-          }
-      }
+Widget buildScoped([int value]) {
+  final consumer = Consumer(
+    builder: (context, watch, child) {
+      final number = watch(scopedProvider).toString();
+      return TextWidget(number);
     },
   );
-}
 
-Widget buildStreamWhen(watch) {
-  final stream = watch(streamProvider);
-
-  return stream.when(
-    data: (value) => TextWidget(value),
-    loading: () => CircularProgressIndicator(),
-    error: (e, stack) => TextWidget('Error: $e'),
-  );
+  return value == null
+      ? consumer
+      : ProviderScope(
+          overrides: [
+            scopedProvider.overrideWithValue(value),
+          ],
+          child: consumer,
+        );
 }
 
 class ProviderScreen extends ConsumerWidget {
@@ -44,7 +27,13 @@ class ProviderScreen extends ConsumerWidget {
   Widget build(BuildContext context, watch) {
     return Scaffold(
       body: Center(
-        child: buildStreamWhen(watch),
+        child: Column(
+          children: [
+            buildScoped(42),
+            buildScoped(90),
+            //  buildScoped(), // throws exception
+          ],
+        ),
       ),
     );
   }
