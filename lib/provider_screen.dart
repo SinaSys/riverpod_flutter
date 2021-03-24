@@ -3,18 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_flutter/text_widget.dart';
 
 //We cannot change this Provider
-final numberProvider = Provider<int>((ref) => 42);
+final numberProvider = Provider<int>((ref) => 43);
 
-class ProviderScreen extends StatelessWidget {
+class ProviderScreen extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, watch) {
     return Scaffold(
       body: Center(
-        child: Consumer(
-          builder: (_, watch, __) {
-            return TextWidget(watch(numberProvider).toString());
-          },
-        ),
+        child: TextWidget(
+          watch(numberProvider).toString()
+        )
       ),
     );
   }
