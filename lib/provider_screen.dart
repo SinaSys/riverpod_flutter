@@ -2,26 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_flutter/text_widget.dart';
 
-//We can change the state
-final stateProvider = StateProvider<int>((ref) => 0);
-//final stateProvider = StateProvider.autoDispose<int>((ref) => 0);
+Future<int> fetchDate() async {
+  await Future.delayed(Duration(seconds: 2));
+  return 20;
+}
+
+final futureProvider = FutureProvider<int>((ref) => fetchDate());
+//final futureProvider = FutureProvider.autoDispose<int>((ref)=>fetchDate());
 
 class ProviderScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, watch) {
-    final provider = watch(stateProvider);
+    final future = watch(futureProvider);
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () {
-          //Line below not recommended
-         // provider.state++;
-          final provider = context.read(stateProvider);
-          provider.state++;
-        },
-      ),
       body: Center(
-          child: TextWidget(provider.state.toString())),
+        child: future.when(
+            data: (value) => TextWidget(value.toString()),
+            loading: () => CircularProgressIndicator(),
+            error: (error, stack) => TextWidget("Error : $error")),
+      ),
     );
   }
 }
