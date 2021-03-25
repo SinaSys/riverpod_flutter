@@ -1,38 +1,59 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_flutter/text_widget.dart';
 
 
-final cityProvider = Provider<String>((ref) => 'Munich2');
-
-final futureProvider = FutureProvider<int>((ref) async {
-  final city = ref.watch(cityProvider);
-  return fetchWeather(city);
-});
-
-Future<int> fetchWeather(String city) async {
-  await Future.delayed(Duration(seconds: 2));
-  return city == 'Munich' ? 20 : 15;
-}
-
-
+final carProvider = ChangeNotifierProvider<CarNotifier>((ref) => CarNotifier());
 
 class ProviderScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, watch) {
-    final future = watch(futureProvider);
+    final car = watch(carProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Combining Providers'),
-      ),
       body: Center(
-        child: future.when(
-          data: (value) => TextWidget(value.toString()),
-          loading: () => CircularProgressIndicator(),
-          error: (e, stack) => TextWidget('Error: $e'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextWidget('Speed: ${car._speed}'),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  child:Text('Increase +5'),
+                  onPressed:()=> car.increase(),
+                ),
+                // car.increase: not efficient
+                // => button rebuilds every time if car state changes
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  child: Text('decrease -30'),
+                  onPressed:()=> context.read(carProvider).decrease(),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+class CarNotifier extends ChangeNotifier {
+  int _speed = 120;
+
+  void increase() {
+    _speed += 5;
+    notifyListeners();
+  }
+
+  void decrease() {
+    _speed = max(0, _speed - 30);
+    notifyListeners();
+  }
+
+// @override
+// void dispose() {}
 }
