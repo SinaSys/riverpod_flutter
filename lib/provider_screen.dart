@@ -1,90 +1,39 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_flutter/text_widget.dart';
 
-import 'button_widget.dart';
-
-final stateNotifierProvider =
-    StateNotifierProvider<CarNotifier>((ref) => CarNotifier());
+final _counterProvider = StateNotifierProvider<CounterStateNotifier>((ref) {
+  return CounterStateNotifier();
+});
 
 class ProviderScreen extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, watch) {
-    final car = watch(stateNotifierProvider.state);
-    final speed = car.speed;
-    final doors = car.doors;
-    final carNotifier = watch(stateNotifierProvider);
+  const ProviderScreen({Key key}) : super(key: key);
 
+  @override
+  Widget build(BuildContext context, ScopedReader watch) {
+    //Caution! : In the line below we should use _name.state.
+    //the .state is important and we shouldn't use _counterProvider alonely
+    // and later change the state value. because the purpose is to modify state
+    //in StateNotifier class not in UI . we can just read state in UI
+    //and for change state we only should use it's StateNotifier class
+
+    final counter = watch(_counterProvider.state);
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextWidget('Speed: $speed'),
-            const SizedBox(height: 8),
-            TextWidget('Doors: $doors'),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ButtonWidget('Increase +5', onClicked: carNotifier.increaseSpeed),
-                const SizedBox(width: 12),
-                ButtonWidget('Decrease -30', onClicked: carNotifier.hitBrake),
-              ],
-            ),
-            const SizedBox(height: 32),
-            Slider(
-              value: car.doors.toDouble(),
-              max: 5,
-              onChanged: (value) => carNotifier.setDoors(value.toInt()),
-            )
-          ],
-        ),
+      body: Center(child: Text('Count: ${counter.count}')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.read(_counterProvider).increment(),
+        child: Icon(Icons.add),
       ),
     );
   }
 }
 
-class Car {
-  final int speed;
-  final int doors;
-
-  const Car({
-    this.speed = 120,
-    this.doors = 4,
-  });
-
-  Car copy({
-    int speed,
-    int doors,
-  }) =>
-      Car(
-        speed: speed ?? this.speed,
-        doors: doors ?? this.doors,
-      );
+class Counter {
+  final int count;
+  Counter(this.count);
 }
 
-class CarNotifier extends StateNotifier<Car> {
-  CarNotifier() : super(Car());
+class CounterStateNotifier extends StateNotifier<Counter> {
+  CounterStateNotifier([Counter counter]) : super(counter ?? Counter(0));
 
-  void setDoors(int doors) {
-    final newState = state.copy(doors: doors);
-    state = newState;
-  }
-
-  void increaseSpeed() {
-    final speed = state.speed + 5;
-    final newState = state.copy(speed: speed);
-    state = newState;
-  }
-
-  void hitBrake() {
-    final speed = max(0, state.speed - 30);
-    final newState = state.copy(speed: speed);
-    state = newState;
-  }
-
-// @override
-// void dispose() {}
+  void increment() => state = Counter(state.count + 1);
 }
