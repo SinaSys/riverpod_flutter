@@ -25,7 +25,9 @@ class ProviderScreen extends ConsumerWidget {
                   child:Text('Increase +5'),
                   onPressed:()=> car.increase(),
                 ),
-                // car.increase: not efficient
+                // car.increase: not efficient and context.read is better
+                //because if we use this bloc of code as a separate widget car.increase not working anymore
+                //but context.read can call in another place
                 // => button rebuilds every time if car state changes
                 const SizedBox(width: 12),
                 ElevatedButton(
