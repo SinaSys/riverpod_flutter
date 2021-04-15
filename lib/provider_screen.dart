@@ -14,7 +14,6 @@ class ProviderScreen extends ConsumerWidget {
     final car = watch(stateNotifierProvider.state);
     final speed = car.speed;
     final doors = car.doors;
-    final carNotifier = watch(stateNotifierProvider);
 
     return Scaffold(
       body: Center(
@@ -22,22 +21,22 @@ class ProviderScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextWidget('Speed: $speed'),
-            const SizedBox(height: 8),
             TextWidget('Doors: $doors'),
-            const SizedBox(height: 32),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ButtonWidget('Increase +5', onClicked: carNotifier.increaseSpeed),
-                const SizedBox(width: 12),
-                ButtonWidget('Decrease -30', onClicked: carNotifier.hitBrake),
+                ButtonWidget('Increase +5',
+                    onClicked:
+                        context.read(stateNotifierProvider).increaseSpeed),
+                ButtonWidget('Decrease -30',
+                    onClicked: context.read(stateNotifierProvider).hitBrake),
               ],
             ),
-            const SizedBox(height: 32),
             Slider(
               value: car.doors.toDouble(),
               max: 5,
-              onChanged: (value) => carNotifier.setDoors(value.toInt()),
+              onChanged: (value) =>
+                  context.read(stateNotifierProvider).setDoors(value.toInt()),
             )
           ],
         ),
