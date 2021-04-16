@@ -1,90 +1,88 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_flutter/text_widget.dart';
+import 'package:riverpod_flutter/user.dart';
+import 'package:riverpod_flutter/user_widget.dart';
 
-import 'button_widget.dart';
+final userProvider = FutureProvider.family<User, String>(
+        (ref, username) async => fetchUser(username));
 
-final stateNotifierProvider =
-    StateNotifierProvider<CarNotifier>((ref) => CarNotifier());
+Future<User> fetchUser(String username) async {
+  await Future.delayed(Duration(milliseconds: 400));
 
-class ProviderScreen extends ConsumerWidget {
+  return users.firstWhere((user) => user.name == username);
+}
+
+class FamilyPrimitiveModifierPage extends StatefulWidget {
   @override
-  Widget build(BuildContext context, watch) {
-    final car = watch(stateNotifierProvider.state);
-    final speed = car.speed;
-    final doors = car.doors;
-    final carNotifier = watch(stateNotifierProvider);
+  _FamilyPrimitiveModifierPageState createState() =>
+      _FamilyPrimitiveModifierPageState();
+}
 
+class _FamilyPrimitiveModifierPageState
+    extends State<FamilyPrimitiveModifierPage> {
+  String username = users.first.name;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextWidget('Speed: $speed'),
-            const SizedBox(height: 8),
-            TextWidget('Doors: $doors'),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ButtonWidget('Increase +5', onClicked: carNotifier.increaseSpeed),
-                const SizedBox(width: 12),
-                ButtonWidget('Decrease -30', onClicked: carNotifier.hitBrake),
-              ],
-            ),
-            const SizedBox(height: 32),
-            Slider(
-              value: car.doors.toDouble(),
-              max: 5,
-              onChanged: (value) => carNotifier.setDoors(value.toInt()),
-            )
-          ],
-        ),
+      body: Column(
+        children: [
+          Container(
+            height: 300,
+            child: Consumer(builder: (context, watch, child) {
+              final future = watch(userProvider(username));
+
+              return future.when(
+                data: (user) => UserWidget(user: user),
+                loading: () => Center(child: CircularProgressIndicator()),
+                error: (e, stack) => Center(child: TextWidget('Not found')),
+              );
+            }),
+          ),
+          buildSearch(),
+        ],
       ),
     );
   }
-}
 
-class Car {
-  final int speed;
-  final int doors;
+  Widget buildSearch() => Container(
+    width: double.infinity,
+    padding: EdgeInsets.symmetric(horizontal: 32),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Search',
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        buildUsernameDropdown(),
+      ],
+    ),
+  );
 
-  const Car({
-    this.speed = 120,
-    this.doors = 4,
-  });
-
-  Car copy({
-    int speed,
-    int doors,
-  }) =>
-      Car(
-        speed: speed ?? this.speed,
-        doors: doors ?? this.doors,
-      );
-}
-
-class CarNotifier extends StateNotifier<Car> {
-  CarNotifier() : super(Car());
-
-  void setDoors(int doors) {
-    final newState = state.copy(doors: doors);
-    state = newState;
-  }
-
-  void increaseSpeed() {
-    final speed = state.speed + 5;
-    final newState = state.copy(speed: speed);
-    state = newState;
-  }
-
-  void hitBrake() {
-    final speed = max(0, state.speed - 30);
-    final newState = state.copy(speed: speed);
-    state = newState;
-  }
-
-// @override
-// void dispose() {}
+  Widget buildUsernameDropdown() => Row(
+    children: [
+      Text(
+        'Username',
+        style: TextStyle(fontSize: 24),
+      ),
+      Spacer(),
+      DropdownButton<String>(
+        value: username,
+        iconSize: 32,
+        style: TextStyle(fontSize: 24, color: Colors.black),
+        onChanged: (value) => setState(() => username = value),
+        items: users
+            .map((user) => user.name)
+            .map<DropdownMenuItem<String>>(
+                (String value) => DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+            ))
+            .toList(),
+      ),
+    ],
+  );
 }
