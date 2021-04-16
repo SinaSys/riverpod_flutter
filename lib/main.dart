@@ -24,7 +24,7 @@ class MyHomePage extends StatelessWidget {
         child: Text("Provider Screen"),
         onPressed: () {
           Navigator.of(context).push(MaterialPageRoute(builder: (_){
-            return FamilyObjectModifierPage();
+            return AutoDisposeModifierPage();
           } ));
         },
       ),
